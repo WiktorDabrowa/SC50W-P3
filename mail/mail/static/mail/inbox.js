@@ -18,6 +18,7 @@ function compose_email() {
 
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#message-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
 
   // Clear out composition fields
@@ -32,8 +33,9 @@ function compose_email() {
 function load_mailbox(mailbox) {
   
   // Show the mailbox and hide other views
-  document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#message-view').style.display = 'none';
+  document.querySelector('#emails-view').style.display = 'block';
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
@@ -61,18 +63,33 @@ fetch(`/emails/${mailbox}`)
     const title_div = document.createElement('div')
     const timestamp_div = document.createElement('div')
     const sender_div = document.createElement('div')
+    const archive_btn = document.createElement('button')
+    const iconSvg = document.createElement('svg');
+    const iconPath = document.createElement('path')
 
-    // Assign classes to divs
+    // Assign classes and attributes to divs
     email_container.classList.add('email_container')
+    email_container.setAttribute('id',`${email['id']}`)
     title_div.classList.add('title_div')
-    title_div.setAttribute('id',`${email['id']}`)
     timestamp_div.classList.add('timestamp_div')
     sender_div.classList.add('sender_div')
-    
+    archive_btn.classList.add('archive_btn')
+    archive_btn.setAttribute('id',`archive_${email['id']}`)
+    iconSvg.setAttribute('fill','currentColor')
+    iconSvg.setAttribute('viewBox','0 0 16 16')
+    iconSvg.setAttribute('height', '16')
+    iconSvg.setAttribute('width', '16')
+    iconSvg.setAttribute('xmlns','http://www.w3.org/2000/svg')
+    iconPath.setAttribute('d', 'M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1V2zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5H2zm13-3H1v2h14V2zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z')
+    archive_btn.innerHTML = 'Arch'
+
     // Populate divs with data
-    title_div.innerText = `Subject: ${String(subject)}`
-    sender_div.innerText = `Sent by: ${String(sender)}`
-    timestamp_div.innerHTML = String(timestamp)
+    iconSvg.append(iconPath);
+    title_div.innerText = `Subject: ${String(subject)}`;
+    sender_div.innerText = `Sent by: ${String(sender)}`;
+    timestamp_div.innerHTML = String(timestamp);
+    archive_btn.append(iconSvg)
+  
     if (email['read'] === true) {
       email_container.style.backgroundColor = '#8080803d'
     } else {
@@ -83,7 +100,9 @@ fetch(`/emails/${mailbox}`)
     email_container.append(title_div)
     email_container.append(sender_div)
     email_container.append(timestamp_div)
+    email_container.append(archive_btn)
     mailbox_div.append(email_container)
+    email_container.addEventListener('click', () => load_email(`${email['id']}`))
   
     }
     
@@ -119,4 +138,14 @@ function send_email() {
 
    // Load the 'sent' Mailbox
    load_mailbox('sent')
+}
+
+
+function load_email(id) {
+
+  document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#message-view').style.display = 'block';
+  
+  document.querySelector('#message-view').innerHTML = `Here you will be able to read email with id: ${id}`
 }

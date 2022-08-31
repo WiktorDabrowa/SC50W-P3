@@ -53,13 +53,14 @@ fetch(`/emails/${mailbox}`)
 
   for(const email of emails) {
 
-    // Get Particular data from Json TODO
+    // Get Particular data from Json 
     let sender = email['sender'];
     let subject = email['subject'];
     let timestamp = email['timestamp'] 
 
     // Create HTML elements
     const email_container = document.createElement('div')
+    const email_wrapper = document.createElement('div')
     const title_div = document.createElement('div')
     const timestamp_div = document.createElement('div')
     const sender_div = document.createElement('div')
@@ -68,6 +69,7 @@ fetch(`/emails/${mailbox}`)
     const iconPath = document.createElement('path')
 
     // Assign classes and attributes to divs
+    email_wrapper.classList.add('email_wrapper')
     email_container.classList.add('email_container')
     email_container.setAttribute('id',`${email['id']}`)
     title_div.classList.add('title_div')
@@ -100,10 +102,15 @@ fetch(`/emails/${mailbox}`)
     email_container.append(title_div)
     email_container.append(sender_div)
     email_container.append(timestamp_div)
-    email_container.append(archive_btn)
-    mailbox_div.append(email_container)
+    email_wrapper.append(archive_btn)
+    email_wrapper.append(email_container)
+    mailbox_div.append(email_wrapper)
     email_container.addEventListener('click', () => load_email(`${email['id']}`))
-  
+    if (mailbox === 'archive') {
+    archive_btn.addEventListener('click', () => unarchive_email(`${email['id']}`))
+    } else {
+    archive_btn.addEventListener('click', () => archive_email(`${email['id']}`))
+    }
     }
     
 });
@@ -147,5 +154,44 @@ function load_email(id) {
   document.querySelector('#compose-view').style.display = 'none';
   document.querySelector('#message-view').style.display = 'block';
   
-  document.querySelector('#message-view').innerHTML = `Here you will be able to read email with id: ${id}`
+
+fetch(`emails/${id}`)
+.then(response => response.json())
+.then(email => {
+  const sender = email['sender'];
+  const timestamp = email['timestamp'];
+  const recipients = email['recipients'];
+  const subject = email['subject'];
+  const body = email['body'];
+
+  document.querySelector('#email_title').innerHTML = String(subject);
+  document.querySelector('#email_sender').innerHTML = `From: ${sender} | On: ${timestamp} | Sent to: ${recipients}`;
+  document.querySelector('#email_body').innerHTML = String(body);
+});
+fetch(`emails/${id}`, {
+  method: 'PUT',
+  body: JSON.stringify({
+      read : true
+  })
+})
+}
+
+function archive_email(id) {
+  fetch (`emails/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      archived : true
+  })
+  })
+  console.log(`This email has id :${id}`)
+  load_mailbox('inbox')
+}
+function unarchive_email(id) {
+  fetch (`emails/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      archived : false
+  })
+  })
+  load_mailbox('archive')
 }

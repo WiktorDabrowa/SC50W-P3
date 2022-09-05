@@ -98,12 +98,21 @@ fetch(`/emails/${mailbox}`)
       email_container.style.backgroundColor = 'White'
     }
 
+    // Add Archive/Unarchive button
+    if (mailbox === 'inbox'  || mailbox ==='archive') {
+      email_wrapper.append(archive_btn)
+    }
     // Add elements to document
     email_container.append(title_div)
     email_container.append(sender_div)
     email_container.append(timestamp_div)
-    email_wrapper.append(archive_btn)
     email_wrapper.append(email_container)
+
+    // Add Archive/Unarchive button
+    if (mailbox === 'inbox'  || mailbox ==='archive') {
+      email_wrapper.append(archive_btn)
+    }
+
     mailbox_div.append(email_wrapper)
     email_container.addEventListener('click', () => load_email(`${email['id']}`))
     if (mailbox === 'archive') {
@@ -163,10 +172,19 @@ fetch(`emails/${id}`)
   const recipients = email['recipients'];
   const subject = email['subject'];
   const body = email['body'];
+  console.log(email)
 
   document.querySelector('#email_title').innerHTML = String(subject);
   document.querySelector('#email_sender').innerHTML = `From: ${sender} | On: ${timestamp} | Sent to: ${recipients}`;
   document.querySelector('#email_body').innerHTML = String(body);
+  let div = document.querySelector('#message-view')
+  let reply_btn = document.createElement('button')
+  reply_btn.classList.add('reply_btn')
+  reply_btn.setAttribute('id',`reply_btn`)
+  reply_btn.innerHTML = 'Reply'
+  div.append(reply_btn)
+  reply_btn.addEventListener('click', () => reply(`${email['id']}`))
+  
 });
 fetch(`emails/${id}`, {
   method: 'PUT',
@@ -194,4 +212,7 @@ function unarchive_email(id) {
   })
   })
   load_mailbox('archive')
+}
+function reply(id) {
+  // TODO
 }

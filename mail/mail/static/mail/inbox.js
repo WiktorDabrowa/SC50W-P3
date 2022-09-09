@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
   document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
-  document.querySelector('#compose').addEventListener('click', compose_email);
+  document.querySelector('#compose').addEventListener('click', () => compose_email('new', null));
 
   // By default, load the inbox
   load_mailbox('inbox');
@@ -14,22 +14,36 @@ document.addEventListener('DOMContentLoaded', function() {
  
 });
 
-function compose_email() {
+function compose_email(mode, id) {
 
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#message-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
 
+  if (mode === 'new'){
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = '';
   document.querySelector('#compose-subject').value = '';
   document.querySelector('#compose-body').value = '';
-
-
-  
-}  
-
+  } else {
+    fetch(`emails/${id}`)
+  .then(response => response.json())
+  .then(email => {
+    document.querySelector('#compose-recipients').value = email['sender'];
+    document.querySelector('#compose-recipients').disabled = true;
+    if (email['subject'].startsWith('RE')) {
+      document.querySelector('#compose-subject').value = email['subject'];
+      document.querySelector('#compose-subject').disabled = true;
+    } else {
+      document.querySelector('#compose-subject').value = `RE:${email['subject']}`;
+      document.querySelector('#compose-subject').disabled = true;
+    }
+    document.querySelector('#compose-body').value = `On ${email['timestamp']}, ${email['sender']} wrote: \n${email['body']}`;
+  }
+  ) 
+  }  
+}
 function load_mailbox(mailbox) {
   
   // Show the mailbox and hide other views
@@ -172,18 +186,13 @@ fetch(`emails/${id}`)
   const recipients = email['recipients'];
   const subject = email['subject'];
   const body = email['body'];
-  console.log(email)
 
   document.querySelector('#email_title').innerHTML = String(subject);
   document.querySelector('#email_sender').innerHTML = `From: ${sender} | On: ${timestamp} | Sent to: ${recipients}`;
   document.querySelector('#email_body').innerHTML = String(body);
-  let div = document.querySelector('#message-view')
-  let reply_btn = document.createElement('button')
-  reply_btn.classList.add('reply_btn')
-  reply_btn.setAttribute('id',`reply_btn`)
-  reply_btn.innerHTML = 'Reply'
-  div.append(reply_btn)
-  reply_btn.addEventListener('click', () => reply(`${email['id']}`))
+  
+  
+  document.querySelector('#reply_btn').addEventListener('click', () => compose_email('response', `${email['id']}`))
   
 });
 fetch(`emails/${id}`, {
@@ -201,7 +210,6 @@ function archive_email(id) {
       archived : true
   })
   })
-  console.log(`This email has id :${id}`)
   load_mailbox('inbox')
 }
 function unarchive_email(id) {
@@ -215,4 +223,9 @@ function unarchive_email(id) {
 }
 function reply(id) {
   // TODO
+  fetch (`emails/${id}`)
+  .then(response => response.json())
+  .then(email =>{
+    // Add logic here
+  })
 }
